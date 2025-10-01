@@ -8,7 +8,7 @@ import "../tasks/task_spades.wdl" as spades
 import "../tasks/task_quast.wdl" as quast
 # import "../tasks/task_rmlst.wdl" as rmlst
 # import "../tasks/task_gbs_sbg.wdl" as gbs_sbg
-# import "../tasks/task_mummer-ani.wdl" as ani
+import "../tasks/task_mummer-ani.wdl" as ani
 import "../tasks/task_ts_mlst.wdl" as ts_mlst
 import "../tasks/task_amrfinderplus.wdl" as amrfinderplus
 # import "../tasks/task_srst2_gbs_virulance.wdl" as srst2_gbs_virulance 
@@ -21,7 +21,7 @@ workflow CTAIR_workflow{
         String samplename
         File kraken2_database
         # String? emmtypingtool_docker_image
-        # File? referance_genome
+        File? referance_genome
         # Boolean? postfix
         # String? read1_postfix
         # String? read2_postfix
@@ -93,12 +93,12 @@ workflow CTAIR_workflow{
     #         samplename = samplename
     # }
 
-    # call ani.mummerANI_task{
-    #     input:
-    #         assembly = spades_task.scaffolds,
-    #         ref_genome = referance_genome,
-    #         samplename = samplename
-    # }
+    call ani.mummerANI_task{
+        input:
+            assembly = spades_task.scaffolds,
+            ref_genome = referance_genome,
+            samplename = samplename
+    }
 
     call ts_mlst.ts_mlst_task{
         input:
@@ -125,7 +125,7 @@ workflow CTAIR_workflow{
 
     output{
         # versioning
-        String GBS_workflow_version = version_capture.gbs_version
+        String WF_workflow_version = version_capture.wf_version
         String Workflow_run_date = version_capture.date
 
         # raw fastqc
@@ -169,9 +169,9 @@ workflow CTAIR_workflow{
         
 
         # ani
-        # Float ani_precent_aligned = mummerANI_task.ani_precent_aligned
-        # Float ani_percent = mummerANI_task.ani_ANI
-        # String ani_species = mummerANI_task.ani_species
+        Float ani_precent_aligned = mummerANI_task.ani_precent_aligned
+        Float ani_percent = mummerANI_task.ani_ANI
+        String ani_species = mummerANI_task.ani_species
 
         # TS_MLST typing
         File TS_MLST_results = ts_mlst_task.ts_mlst_results
