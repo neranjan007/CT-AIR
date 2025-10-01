@@ -2,7 +2,7 @@ version 1.0
 
 task mummerANI_task{
     meta{
-        description: "identify ANI of Streptococcus_pyogenes"
+        description: "identify ANI of Aeromonas species"
     }
 
     input{
