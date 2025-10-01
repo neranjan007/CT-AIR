@@ -11,14 +11,14 @@ task version_capture {
     volatile: true
   }
   command {
-    GBS_Version="GBS v1.4.1"
+    WF_Version="AIR v1.0.0"
     ~{default='' 'export TZ=' + timezone}
     date +"%Y-%m-%d" > TODAY
-    echo "$GBS_Version" > GBS_VERSION
+    echo "$WF_Version" > WF_VERSION
   }
   output {
     String date = read_string("TODAY")
-    String gbs_version = read_string("GBS_VERSION")
+    String wf_version = read_string("WF_VERSION")
   }
   runtime {
         docker: "~{docker}"
