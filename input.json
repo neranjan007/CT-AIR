@@ -1,0 +1,7 @@
+{
+  "CTAIR_workflow.samplename": "000000000",
+  "CTAIR_workflow.R1": "/path/R1_001.fastq.gz",
+  "CTAIR_workflow.R2": "/path/R2_001.fastq.gz",
+  "CTAIR_workflow.kraken2_database": "/path/k2_standard_08gb_20230605.tar.gz"
+}
+
