@@ -54,7 +54,9 @@ task kraken_n_bracken_task{
         # Genus
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk 'NR==1 {print $1}' > GENUS 
         # sorted bracken 
-        sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
+        # sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
+        head -n 1 ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
+        tail -n +2 ~{samplename}.bracken.txt | sort -t$'\t' -k7 -nr >> ~{samplename}.bracken.sorted.txt
 
     >>>
 
