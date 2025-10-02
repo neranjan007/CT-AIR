@@ -1,0 +1,7 @@
+version: 1.2
+workflows:
+  - name: CT_AIR
+    subclass: WDL
+    primaryDescriptorPath: /workflows/wf_ctair.wdl
+    testParameterFiles:
+      - /files/empty.json
