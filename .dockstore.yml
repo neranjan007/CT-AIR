@@ -1,6 +1,6 @@
 version: 1.2
 workflows:
-  - name: CT_AIR
+  - name: CT-AIR
     subclass: WDL
     primaryDescriptorPath: /workflows/wf_ctair.wdl
     testParameterFiles:
