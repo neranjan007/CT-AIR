@@ -27,12 +27,12 @@ workflow CTAIR_workflow{
         # String? read2_postfix
     }
 
+    # tasks and/or subworkflows to execute
     # Version
     call versioning.version_capture{
         input:
     }
 
-    # tasks and/or subworkflows to execute
     call fastqc.fastqc_task as rawfastqc_task{
         input:
             read1 = R1,
