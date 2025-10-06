@@ -23,8 +23,8 @@ task fastqc_task {
         mkdir fastqc_out
         fastqc ~{read1} ~{read2} -t ~{cpu} -o fastqc_out
         fastqc -v | cut -d " " -f 2 > FASTQC_VERSION
-        echo ~{base_r1}
-        echo ~{base_r2}
+        # echo ~{base_r1}
+        # echo ~{base_r2}
 
         zcat ~{read1} | fastq-scan | jq .qc_stats.read_total > TOTAL_R1_READS
         zcat ~{read1} | fastq-scan | jq .qc_stats.total_bp > TOTAL_R1_BASES
@@ -39,7 +39,7 @@ task fastqc_task {
         echo "$expected_ungapped_length" > EXP_LENGTH
 
         cal_coverage=`expr $total_no_bases / $expected_ungapped_length`
-        echo $cal_coverage
+        # echo $cal_coverage
         echo "$cal_coverage" > COVERAGE 
     >>>
 
