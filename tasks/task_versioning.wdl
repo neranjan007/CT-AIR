@@ -11,7 +11,7 @@ task version_capture {
     volatile: true
   }
   command {
-    WF_Version="AIR v1.0.0"
+    WF_Version="AIR v alpha-dev1"
     ~{default='' 'export TZ=' + timezone}
     date +"%Y-%m-%d" > TODAY
     echo "$WF_Version" > WF_VERSION
