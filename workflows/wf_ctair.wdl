@@ -12,6 +12,7 @@ import "../tasks/task_mummer-ani.wdl" as ani
 import "../tasks/task_ts_mlst.wdl" as ts_mlst
 import "../tasks/task_amrfinderplus.wdl" as amrfinderplus
 # import "../tasks/task_srst2_gbs_virulance.wdl" as srst2_gbs_virulance 
+# import "../tasks/task_kraken_n_bracken.wdl" as kraken_n_bracken
 import "../tasks/task_versioning.wdl" as versioning
 
 workflow CTAIR_workflow{
@@ -51,7 +52,7 @@ workflow CTAIR_workflow{
             read2 = trimmomatic_task.read2_paired
     }
 
-    call kraken_n_bracken.kraken_n_bracken_task as trimmed_kraken_n_bracken_task{
+    call kraken_n_bracken.kraken_n_bracken_pe_task as trimmed_kraken_n_bracken_task{
         input:
             read1 = trimmomatic_task.read1_paired,
             read2 = trimmomatic_task.read2_paired,
@@ -79,6 +80,13 @@ workflow CTAIR_workflow{
     call quast.quast_task{
         input:
             assembly = spades_task.scaffolds,
+            samplename = samplename
+    }
+
+    call kraken_n_bracken.kraken_n_bracken_assembly_task as assembly_kraken_n_bracken_task{
+        input:
+            assembly = spades_task.scaffolds,
+            kraken2_db = kraken2_database,
             samplename = samplename
     }
 
@@ -146,12 +154,12 @@ workflow CTAIR_workflow{
         String FASTQ_SCAN_trim_coverage = trimmedfastqc_task.coverage
 
         # kraken2 Bracken after trimming
-        String Bracken_top_taxon = trimmed_kraken_n_bracken_task.bracken_taxon
-        Int Bracken_taxid = trimmed_kraken_n_bracken_task.bracken_taxid
-        Float Bracken_taxon_ratio = trimmed_kraken_n_bracken_task.bracken_taxon_ratio
-        String Bracken_top_genus = trimmed_kraken_n_bracken_task.bracken_genus
-        File Bracken_report_sorted = trimmed_kraken_n_bracken_task.bracken_report_sorted
-        File Bracken_report_filtered = trimmed_kraken_n_bracken_task.bracken_report_filtered
+            String Bracken_top_taxon = trimmed_kraken_n_bracken_task.bracken_taxon
+            Int Bracken_taxid = trimmed_kraken_n_bracken_task.bracken_taxid
+            Float Bracken_taxon_ratio = trimmed_kraken_n_bracken_task.bracken_taxon_ratio
+            String Bracken_top_genus = trimmed_kraken_n_bracken_task.bracken_genus
+            File Bracken_report_sorted = trimmed_kraken_n_bracken_task.bracken_report_sorted
+            File Bracken_report_filtered = trimmed_kraken_n_bracken_task.bracken_report_filtered
 
         # Spades
         File Spades_scaffolds = spades_task.scaffolds
@@ -163,6 +171,14 @@ workflow CTAIR_workflow{
         Int QUAST_no_of_contigs = quast_task.number_contigs
         Int QUAST_n50_value = quast_task.n50_value
         Float QUAST_gc_percent = quast_task.gc_percent
+
+        # Kraken after assembly
+        String Bracken_assembly_top_taxon = assembly_kraken_n_bracken_task.bracken_taxon
+        Int Bracken_assembly_taxid = assembly_kraken_n_bracken_task.bracken_taxid
+        Float Bracken_assembly_taxon_ratio = assembly_kraken_n_bracken_task.bracken_taxon_ratio
+        String Bracken_assembly_top_genus = assembly_kraken_n_bracken_task.bracken_genus
+        File Bracken_assembly_report_sorted = assembly_kraken_n_bracken_task.bracken_report_sorted
+        File Bracken_assembly_report_filtered = assembly_kraken_n_bracken_task.bracken_report_filtered
 
         # rMLST 
         # String rMLST_TAXON = rmlst_task.taxon
