@@ -11,6 +11,7 @@ import "../tasks/task_quast.wdl" as quast
 import "../tasks/task_mummer-ani.wdl" as ani
 import "../tasks/task_ts_mlst.wdl" as ts_mlst
 import "../tasks/task_amrfinderplus.wdl" as amrfinderplus
+import "../tasks/task_checkm2.wdl" as checkm 
 # import "../tasks/task_srst2_gbs_virulance.wdl" as srst2_gbs_virulance 
 # import "../tasks/task_kraken_n_bracken.wdl" as kraken_n_bracken
 import "../tasks/task_versioning.wdl" as versioning
@@ -26,6 +27,7 @@ workflow CTAIR_workflow{
         # Boolean? postfix
         # String? read1_postfix
         # String? read2_postfix
+        File checkm2_db
     }
 
     # tasks and/or subworkflows to execute
@@ -121,6 +123,13 @@ workflow CTAIR_workflow{
             # organism = mummerANI_task.ani_species
     }
 
+    call checkm.checkm2 {
+      input:
+      samplename = samplename,
+      assembly = spades_task.scaffolds,
+      checkm2_db = checkm2_db
+    }
+
     # call srst2_gbs_virulance.srst2_gbs_virulence_task{
     #     input:
     #         read1 = trimmomatic_task.read1_paired,
@@ -154,12 +163,12 @@ workflow CTAIR_workflow{
         String FASTQ_SCAN_trim_coverage = trimmedfastqc_task.coverage
 
         # kraken2 Bracken after trimming
-            String Bracken_top_taxon = trimmed_kraken_n_bracken_task.bracken_taxon
-            Int Bracken_taxid = trimmed_kraken_n_bracken_task.bracken_taxid
-            Float Bracken_taxon_ratio = trimmed_kraken_n_bracken_task.bracken_taxon_ratio
-            String Bracken_top_genus = trimmed_kraken_n_bracken_task.bracken_genus
-            File Bracken_report_sorted = trimmed_kraken_n_bracken_task.bracken_report_sorted
-            File Bracken_report_filtered = trimmed_kraken_n_bracken_task.bracken_report_filtered
+        String Bracken_top_taxon = trimmed_kraken_n_bracken_task.bracken_taxon
+        Int Bracken_taxid = trimmed_kraken_n_bracken_task.bracken_taxid
+        Float Bracken_taxon_ratio = trimmed_kraken_n_bracken_task.bracken_taxon_ratio
+        String Bracken_top_genus = trimmed_kraken_n_bracken_task.bracken_genus
+        File Bracken_report_sorted = trimmed_kraken_n_bracken_task.bracken_report_sorted
+        File Bracken_report_filtered = trimmed_kraken_n_bracken_task.bracken_report_filtered
 
         # Spades
         File Spades_scaffolds = spades_task.scaffolds
@@ -208,7 +217,12 @@ workflow CTAIR_workflow{
         String AMRFINDERPLUS_amr_classes = amrfinderplus_task.amrfinderplus_amr_classes
         String AMRFINDERPLUS_amr_subclasses = amrfinderplus_task.amrfinderplus_amr_subclasses
 
-
+        # CheckM2
+        String? checkm2_version = checkm2.version 
+        File? checkm2_report = checkm2.report
+        String? checkm2_docker = checkm2.checkm2_docker
+        String? completeness = checkm2.completeness
+        String? contamination = checkm2.contamination
 
     }
 }
