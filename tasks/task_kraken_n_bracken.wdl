@@ -42,8 +42,11 @@ task kraken_n_bracken_pe_task{
             -l S \
             -t ~{bracken_threshold}
         
+        # sorted bracken with header
+        head -n 1 ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
+        tail -n +2 ~{samplename}.bracken.txt | sort -t$'\t' -k7 -nr >> ~{samplename}.bracken.sorted.txt
         # filter report
-        awk '{if ($NF >= 0.01){print}}' ~{samplename}.bracken.txt > ~{samplename}.bracken.filtered.txt
+        awk '{if ($NF >= 0.01){print}}' ~{samplename}.bracken.sorted.txt > ~{samplename}.bracken.sorted.filtered.txt
         # top taxon
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $1}' > TAXON 
         # Pecentage
@@ -53,10 +56,6 @@ task kraken_n_bracken_pe_task{
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $2}' > TAXID 
         # Genus
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk 'NR==1 {print $1}' > GENUS 
-        # sorted bracken 
-        # sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
-        head -n 1 ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
-        tail -n +2 ~{samplename}.bracken.txt | sort -t$'\t' -k7 -nr >> ~{samplename}.bracken.sorted.txt
 
     >>>
 
@@ -64,7 +63,7 @@ task kraken_n_bracken_pe_task{
         File kraken2_report = "~{samplename}.kraken.report.txt"
         File bracken_report = "~{samplename}.bracken.txt"
         File bracken_report_sorted = "~{samplename}.bracken.sorted.txt"
-        File bracken_report_filtered = "~{samplename}.bracken.filtered.txt"
+        File bracken_report_filtered = "~{samplename}.bracken.sorted.filtered.txt"
         File bracken_taxid_file = "~{samplename}.taxid.txt"
         Int bracken_taxid = read_int("TAXID")
         Float bracken_taxon_ratio = read_float("RATIO")
@@ -123,8 +122,11 @@ task kraken_n_bracken_assembly_task{
             -l S \
             -t ~{bracken_threshold}
         
+        # sorted bracken with header
+        head -n 1 ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
+        tail -n +2 ~{samplename}.bracken.txt | sort -t$'\t' -k7 -nr >> ~{samplename}.bracken.sorted.txt
         # filter report
-        awk '{if ($NF >= 0.01){print}}' ~{samplename}.bracken.txt > ~{samplename}.bracken.filtered.txt
+        awk '{if ($NF >= 0.01){print}}' ~{samplename}.bracken.sorted.txt > ~{samplename}.bracken.sorted.filtered.txt
         # top taxon
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $1}' > TAXON 
         # Pecentage
@@ -133,11 +135,7 @@ task kraken_n_bracken_assembly_task{
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $2}' > ~{samplename}.taxid.txt
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $2}' > TAXID 
         # Genus
-        sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk 'NR==1 {print $1}' > GENUS 
-        # sorted bracken 
-        # sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
-        head -n 1 ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
-        tail -n +2 ~{samplename}.bracken.txt | sort -t$'\t' -k7 -nr >> ~{samplename}.bracken.sorted.txt
+        sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk 'NR==1 {print $1}' > GENUS
 
     >>>
 
@@ -145,7 +143,7 @@ task kraken_n_bracken_assembly_task{
         File kraken2_report = "~{samplename}.kraken.report.txt"
         File bracken_report = "~{samplename}.bracken.txt"
         File bracken_report_sorted = "~{samplename}.bracken.sorted.txt"
-        File bracken_report_filtered = "~{samplename}.bracken.filtered.txt"
+        File bracken_report_filtered = "~{samplename}.bracken.sorted.filtered.txt"
         File bracken_taxid_file = "~{samplename}.taxid.txt"
         Int bracken_taxid = read_int("TAXID")
         Float bracken_taxon_ratio = read_float("RATIO")
