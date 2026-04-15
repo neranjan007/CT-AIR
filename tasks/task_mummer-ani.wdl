@@ -73,11 +73,13 @@ task mummerANI_task{
                 echo "Reference genome used for ANI is: ${REF_GENOME}" 
             fi
         fi
+        awk -F'\t' '$1 !~ /scaffolds/' ~{samplename}.ani-mummer.out.sorted.tsv > ~{samplename}.ani-mummer.out.sorted.filtered.tsv
 
     >>>
 
     output {
         File ani_output_tsv = "~{samplename}.ani-mummer.out.tsv"
+        File ani_filtered_output_tsv = "~{samplename}.ani-mummer.out.sorted.filtered.tsv"
         Float ani_precent_aligned = read_float("TOP_PERCENT_ANI")
         Float ani_ANI = read_float("TOP_ANI")
         String ani_species = read_string("TOP_SPECIES_ANI")
