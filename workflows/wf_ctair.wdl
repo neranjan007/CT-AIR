@@ -197,6 +197,7 @@ workflow CTAIR_workflow{
         Float ani_precent_aligned = mummerANI_task.ani_precent_aligned
         Float ani_percent = mummerANI_task.ani_ANI
         String ani_species = mummerANI_task.ani_species
+        File ani_filtered_tsv = mummerANI_task.ani_filtered_output_tsv
 
         # TS_MLST typing
         File TS_MLST_results = ts_mlst_task.ts_mlst_results
