@@ -6,6 +6,7 @@ import "../tasks/task_kraken_n_bracken.wdl" as kraken_n_bracken
 import "../tasks/task_trimmomatic.wdl" as trimmomatic
 import "../tasks/task_spades.wdl" as spades
 import "../tasks/task_quast.wdl" as quast
+import "../tasks/task_quality_check.wdl" as quality_check
 # import "../tasks/task_rmlst.wdl" as rmlst
 # import "../tasks/task_gbs_sbg.wdl" as gbs_sbg
 import "../tasks/task_mummer-ani.wdl" as ani
@@ -82,6 +83,16 @@ workflow CTAIR_workflow{
     call quast.quast_task{
         input:
             assembly = spades_task.scaffolds,
+            samplename = samplename
+    }
+
+    # In your workflow, after the quast_task call:
+    call quality_check.quality_check_task {
+        input:
+            genome_length = quast_task.genome_length,
+            number_contigs = quast_task.number_contigs,
+            n50_value = quast_task.n50_value,
+            coverage = trimmedfastqc_task.coverage, #estimated_coverage,  # You'll need to provide this
             samplename = samplename
     }
 
@@ -180,6 +191,12 @@ workflow CTAIR_workflow{
         Int QUAST_no_of_contigs = quast_task.number_contigs
         Int QUAST_n50_value = quast_task.n50_value
         Float QUAST_gc_percent = quast_task.gc_percent
+
+        # qc check
+        String qc_check_status = quality_check_task.qc_status   
+        File qc_check_report = quality_check_task.quality_report_json
+        File qc_check_summary = quality_check_task.quality_summary_tsv
+
 
         # Kraken after assembly
         String Bracken_assembly_top_taxon = assembly_kraken_n_bracken_task.bracken_taxon
