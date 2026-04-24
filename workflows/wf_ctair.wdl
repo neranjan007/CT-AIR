@@ -194,8 +194,8 @@ workflow CTAIR_workflow{
 
         # qc check
         String qc_check_status = quality_check_task.qc_status   
-        File qc_check_report = quality_check_task.quality_report_json
-        File qc_check_summary = quality_check_task.quality_summary_tsv
+        File qc_check_json_report = quality_check_task.quality_report_json
+        File qc_check_summary_report = quality_check_task.quality_summary_tsv
 
 
         # Kraken after assembly
