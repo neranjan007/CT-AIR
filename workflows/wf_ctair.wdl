@@ -13,6 +13,7 @@ import "../tasks/task_mummer-ani.wdl" as ani
 import "../tasks/task_ts_mlst.wdl" as ts_mlst
 import "../tasks/task_amrfinderplus.wdl" as amrfinderplus
 import "../tasks/task_checkm2.wdl" as checkm 
+import "../tasks/task_summary_report.wdl" as summary_report
 # import "../tasks/task_srst2_gbs_virulance.wdl" as srst2_gbs_virulance 
 # import "../tasks/task_kraken_n_bracken.wdl" as kraken_n_bracken
 import "../tasks/task_versioning.wdl" as versioning
@@ -141,6 +142,37 @@ workflow CTAIR_workflow{
       checkm2_db = checkm2_db
     }
 
+    # call summary_report.summary_report_task {
+    #   input:
+    #     samplename = samplename,
+    #     # QC Metrics
+    #     raw_coverage = rawfastqc_task.coverage,
+    #     trim_coverage = trimmedfastqc_task.coverage,
+    #     trimmomatic_surviving_pairs_percent = trimmomatic_task.serviving_read_pairs,
+    #     qc_check_status = quality_check_task.qc_status,
+    #     quality_summary_tsv = quality_check_task.quality_summary_tsv,
+    #     # Bracken Results (from assembly)
+    #     bracken_filtered_report = assembly_kraken_n_bracken_task.bracken_report_filtered,
+    #     bracken_taxon = assembly_kraken_n_bracken_task.bracken_taxon,
+    #     bracken_taxon_ratio = "~{assembly_kraken_n_bracken_task.bracken_taxon_ratio}",
+    #     bracken_taxid = assembly_kraken_n_bracken_task.bracken_taxid,
+    #     # ANI Results
+    #     ani_filtered_report = mummerANI_task.ani_filtered_output_tsv,
+    #     ani_precent_aligned = "~{mummerANI_task.ani_precent_aligned}",
+    #     ani_ANI = "~{mummerANI_task.ani_ANI}",
+    #     ani_species = mummerANI_task.ani_species,
+    #     # QUAST Results
+    #     quast_report = quast_task.quast_report,
+    #     genome_length = quast_task.genome_length,
+    #     number_contigs = quast_task.number_contigs,
+    #     n50_value = quast_task.n50_value,
+    #     gc_percent = "~{quast_task.gc_percent}",
+    #     # MLST Results
+    #     ts_mlst_predicted_st = ts_mlst_task.ts_mlst_predicted_st,
+    #     ts_mlst_pubmlst_scheme = ts_mlst_task.ts_mlst_pubmlst_scheme,
+    #     ts_mlst_allelic_profile = ts_mlst_task.ts_mlst_allelic_profile
+    # }
+
     # call srst2_gbs_virulance.srst2_gbs_virulence_task{
     #     input:
     #         read1 = trimmomatic_task.read1_paired,
@@ -241,6 +273,10 @@ workflow CTAIR_workflow{
         String? checkm2_docker = checkm2.checkm2_docker
         String? completeness = checkm2.completeness
         String? contamination = checkm2.contamination
+
+        # Summary Report
+        # File Summary_report_html = summary_report_task.html_report
+        # File Summary_report_metadata = summary_report_task.report_metadata
 
     }
 }
