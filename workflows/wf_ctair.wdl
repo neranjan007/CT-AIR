@@ -13,7 +13,7 @@ import "../tasks/task_mummer-ani.wdl" as ani
 import "../tasks/task_ts_mlst.wdl" as ts_mlst
 import "../tasks/task_amrfinderplus.wdl" as amrfinderplus
 import "../tasks/task_checkm2.wdl" as checkm 
-import "../tasks/task_summary_report.wdl" as summary_report
+# import "../tasks/task_summary_report.wdl" as summary_report
 # import "../tasks/task_srst2_gbs_virulance.wdl" as srst2_gbs_virulance 
 # import "../tasks/task_kraken_n_bracken.wdl" as kraken_n_bracken
 import "../tasks/task_versioning.wdl" as versioning
