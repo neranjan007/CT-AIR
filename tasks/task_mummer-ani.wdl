@@ -50,7 +50,9 @@ task mummerANI_task{
             echo "ANI skipped due to high genetic divergence from reference genomes" > ANI_TOP_SPECIES_MATCH
         # if output TSV has greater than 1 lines, then parse for appropriate outputs
         else
-            awk 'NR == 1;  NR > 1 {print $0 | "sort -k5 -nr" }' ~{samplename}.ani-mummer.out.tsv | tee ~{samplename}.ani-mummer.out.sorted.tsv
+            #awk 'NR == 1;  NR > 1 {print $0 | "sort -k5 -nr" }' ~{samplename}.ani-mummer.out.tsv | tee ~{samplename}.ani-mummer.out.sorted.tsv
+            # parse out ANI results with percentBases aligned greater than 80% and sort by ANI
+            awk 'NR==1 || $5 > 80' ~{samplename}.ani-mummer.out.tsv | awk 'NR==1; NR>1 {print | "sort -k3 -nr"}' | tee ~{samplename}.ani-mummer.out.sorted.tsv
             ## parse out highest percentBases aligned
             awk 'NR == 2 {print $0 | "cut -f 5" }' ~{samplename}.ani-mummer.out.sorted.tsv | tee TOP_PERCENT_ANI
             echo "highest percent bases aligned is: $(cat TOP_PERCENT_ANI)"
