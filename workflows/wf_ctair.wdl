@@ -6,12 +6,16 @@ import "../tasks/task_kraken_n_bracken.wdl" as kraken_n_bracken
 import "../tasks/task_trimmomatic.wdl" as trimmomatic
 import "../tasks/task_spades.wdl" as spades
 import "../tasks/task_quast.wdl" as quast
+import "../tasks/task_quality_check.wdl" as quality_check
 # import "../tasks/task_rmlst.wdl" as rmlst
 # import "../tasks/task_gbs_sbg.wdl" as gbs_sbg
 import "../tasks/task_mummer-ani.wdl" as ani
 import "../tasks/task_ts_mlst.wdl" as ts_mlst
 import "../tasks/task_amrfinderplus.wdl" as amrfinderplus
+import "../tasks/task_checkm2.wdl" as checkm 
+# import "../tasks/task_summary_report.wdl" as summary_report
 # import "../tasks/task_srst2_gbs_virulance.wdl" as srst2_gbs_virulance 
+# import "../tasks/task_kraken_n_bracken.wdl" as kraken_n_bracken
 import "../tasks/task_versioning.wdl" as versioning
 
 workflow CTAIR_workflow{
@@ -25,6 +29,7 @@ workflow CTAIR_workflow{
         # Boolean? postfix
         # String? read1_postfix
         # String? read2_postfix
+        File checkm2_db
     }
 
     # tasks and/or subworkflows to execute
@@ -51,7 +56,7 @@ workflow CTAIR_workflow{
             read2 = trimmomatic_task.read2_paired
     }
 
-    call kraken_n_bracken.kraken_n_bracken_task as trimmed_kraken_n_bracken_task{
+    call kraken_n_bracken.kraken_n_bracken_pe_task as trimmed_kraken_n_bracken_task{
         input:
             read1 = trimmomatic_task.read1_paired,
             read2 = trimmomatic_task.read2_paired,
@@ -79,6 +84,23 @@ workflow CTAIR_workflow{
     call quast.quast_task{
         input:
             assembly = spades_task.scaffolds,
+            samplename = samplename
+    }
+
+    # In your workflow, after the quast_task call:
+    call quality_check.quality_check_task {
+        input:
+            genome_length = quast_task.genome_length,
+            number_contigs = quast_task.number_contigs,
+            n50_value = quast_task.n50_value,
+            coverage = trimmedfastqc_task.coverage, #estimated_coverage,  # You'll need to provide this
+            samplename = samplename
+    }
+
+    call kraken_n_bracken.kraken_n_bracken_assembly_task as assembly_kraken_n_bracken_task{
+        input:
+            assembly = spades_task.scaffolds,
+            kraken2_db = kraken2_database,
             samplename = samplename
     }
 
@@ -112,6 +134,44 @@ workflow CTAIR_workflow{
             samplename = samplename,
             # organism = mummerANI_task.ani_species
     }
+
+    call checkm.checkm2 {
+      input:
+      samplename = samplename,
+      assembly = spades_task.scaffolds,
+      checkm2_db = checkm2_db
+    }
+
+    # call summary_report.summary_report_task {
+    #   input:
+    #     samplename = samplename,
+    #     # QC Metrics
+    #     raw_coverage = rawfastqc_task.coverage,
+    #     trim_coverage = trimmedfastqc_task.coverage,
+    #     trimmomatic_surviving_pairs_percent = trimmomatic_task.serviving_read_pairs,
+    #     qc_check_status = quality_check_task.qc_status,
+    #     quality_summary_tsv = quality_check_task.quality_summary_tsv,
+    #     # Bracken Results (from assembly)
+    #     bracken_filtered_report = assembly_kraken_n_bracken_task.bracken_report_filtered,
+    #     bracken_taxon = assembly_kraken_n_bracken_task.bracken_taxon,
+    #     bracken_taxon_ratio = "~{assembly_kraken_n_bracken_task.bracken_taxon_ratio}",
+    #     bracken_taxid = assembly_kraken_n_bracken_task.bracken_taxid,
+    #     # ANI Results
+    #     ani_filtered_report = mummerANI_task.ani_filtered_output_tsv,
+    #     ani_precent_aligned = "~{mummerANI_task.ani_precent_aligned}",
+    #     ani_ANI = "~{mummerANI_task.ani_ANI}",
+    #     ani_species = mummerANI_task.ani_species,
+    #     # QUAST Results
+    #     quast_report = quast_task.quast_report,
+    #     genome_length = quast_task.genome_length,
+    #     number_contigs = quast_task.number_contigs,
+    #     n50_value = quast_task.n50_value,
+    #     gc_percent = "~{quast_task.gc_percent}",
+    #     # MLST Results
+    #     ts_mlst_predicted_st = ts_mlst_task.ts_mlst_predicted_st,
+    #     ts_mlst_pubmlst_scheme = ts_mlst_task.ts_mlst_pubmlst_scheme,
+    #     ts_mlst_allelic_profile = ts_mlst_task.ts_mlst_allelic_profile
+    # }
 
     # call srst2_gbs_virulance.srst2_gbs_virulence_task{
     #     input:
@@ -164,6 +224,20 @@ workflow CTAIR_workflow{
         Int QUAST_n50_value = quast_task.n50_value
         Float QUAST_gc_percent = quast_task.gc_percent
 
+        # qc check
+        String qc_check_status = quality_check_task.qc_status   
+        File qc_check_json_report = quality_check_task.quality_report_json
+        File qc_check_summary_report = quality_check_task.quality_summary_tsv
+
+
+        # Kraken after assembly
+        String Bracken_assembly_top_taxon = assembly_kraken_n_bracken_task.bracken_taxon
+        Int Bracken_assembly_taxid = assembly_kraken_n_bracken_task.bracken_taxid
+        Float Bracken_assembly_taxon_ratio = assembly_kraken_n_bracken_task.bracken_taxon_ratio
+        String Bracken_assembly_top_genus = assembly_kraken_n_bracken_task.bracken_genus
+        File Bracken_assembly_report_sorted = assembly_kraken_n_bracken_task.bracken_report_sorted
+        File Bracken_assembly_report_filtered = assembly_kraken_n_bracken_task.bracken_report_filtered
+
         # rMLST 
         # String rMLST_TAXON = rmlst_task.taxon
         
@@ -172,6 +246,7 @@ workflow CTAIR_workflow{
         Float ani_precent_aligned = mummerANI_task.ani_precent_aligned
         Float ani_percent = mummerANI_task.ani_ANI
         String ani_species = mummerANI_task.ani_species
+        File ani_filtered_tsv = mummerANI_task.ani_filtered_output_tsv
 
         # TS_MLST typing
         File TS_MLST_results = ts_mlst_task.ts_mlst_results
@@ -192,7 +267,16 @@ workflow CTAIR_workflow{
         String AMRFINDERPLUS_amr_classes = amrfinderplus_task.amrfinderplus_amr_classes
         String AMRFINDERPLUS_amr_subclasses = amrfinderplus_task.amrfinderplus_amr_subclasses
 
+        # CheckM2
+        String? checkm2_version = checkm2.version 
+        File? checkm2_report = checkm2.report
+        String? checkm2_docker = checkm2.checkm2_docker
+        String? completeness = checkm2.completeness
+        String? contamination = checkm2.contamination
 
+        # Summary Report
+        # File Summary_report_html = summary_report_task.html_report
+        # File Summary_report_metadata = summary_report_task.report_metadata
 
     }
 }

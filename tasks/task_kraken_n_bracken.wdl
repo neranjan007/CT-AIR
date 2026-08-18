@@ -1,6 +1,6 @@
 version 1.0 
 
-task kraken_n_bracken_task{
+task kraken_n_bracken_pe_task{
     meta{
         description: "taxonomic assignment of metagenomics sequencing reads"
     }
@@ -42,8 +42,11 @@ task kraken_n_bracken_task{
             -l S \
             -t ~{bracken_threshold}
         
+        # sorted bracken with header
+        head -n 1 ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
+        tail -n +2 ~{samplename}.bracken.txt | sort -t$'\t' -k7 -nr >> ~{samplename}.bracken.sorted.txt
         # filter report
-        awk '{if ($NF >= 0.01){print}}' ~{samplename}.bracken.txt > ~{samplename}.bracken.filtered.txt
+        awk '{if ($NF >= 0.01){print}}' ~{samplename}.bracken.sorted.txt > ~{samplename}.bracken.sorted.filtered.txt
         # top taxon
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $1}' > TAXON 
         # Pecentage
@@ -53,10 +56,6 @@ task kraken_n_bracken_task{
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $2}' > TAXID 
         # Genus
         sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk 'NR==1 {print $1}' > GENUS 
-        # sorted bracken 
-        # sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
-        head -n 1 ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
-        tail -n +2 ~{samplename}.bracken.txt | sort -t$'\t' -k7 -nr >> ~{samplename}.bracken.sorted.txt
 
     >>>
 
@@ -64,7 +63,87 @@ task kraken_n_bracken_task{
         File kraken2_report = "~{samplename}.kraken.report.txt"
         File bracken_report = "~{samplename}.bracken.txt"
         File bracken_report_sorted = "~{samplename}.bracken.sorted.txt"
-        File bracken_report_filtered = "~{samplename}.bracken.filtered.txt"
+        File bracken_report_filtered = "~{samplename}.bracken.sorted.filtered.txt"
+        File bracken_taxid_file = "~{samplename}.taxid.txt"
+        Int bracken_taxid = read_int("TAXID")
+        Float bracken_taxon_ratio = read_float("RATIO")
+        String bracken_taxon = read_string("TAXON")
+        String bracken_genus = read_string("GENUS")
+
+    }
+
+    runtime {
+        docker: "~{docker}"
+        memory: "~{memory} GB"
+        cpu: cpu
+        disks: "local-disk 100 SSD"
+        preemptible: 0
+    }
+}
+
+
+
+task kraken_n_bracken_assembly_task{
+    meta{
+        description: "taxonomic assignment of metagenomics sequencing reads"
+    }
+
+    input{
+        File assembly
+        String samplename
+        File kraken2_db
+        Int bracken_read_len = 100
+        Int bracken_threshold = 10
+        String? min_hit_groups = 3
+        String docker = "kincekara/kraken-bracken:k2.1.2-b2.8"
+        Int? memory = 32
+        Int cpu = 4
+    }
+
+    command <<<
+        # decompress the Kraken2 db
+        mkdir db
+        tar -I pigz -C ./db/ -xvf ~{kraken2_db}
+
+        # kraken run
+        kraken2 \
+            --db ./db/ \
+            --threads ~{cpu} \
+            --minimum-hit-groups ~{min_hit_groups} \
+            --report-minimizer-data \
+            --report ~{samplename}.kraken.report.txt  ~{assembly} > ./k2_output.txt 2> ./k2_error.txt 
+        
+        # run braken
+        bracken \
+            -d ./db/ \
+            -i ~{samplename}.kraken.report.txt \
+            -o ~{samplename}.bracken.txt \
+            -r ~{bracken_read_len} \
+            -l S \
+            -t ~{bracken_threshold}
+        
+        # sorted bracken with header
+        head -n 1 ~{samplename}.bracken.txt > ~{samplename}.bracken.sorted.txt
+        tail -n +2 ~{samplename}.bracken.txt | sort -t$'\t' -k7 -nr >> ~{samplename}.bracken.sorted.txt
+        # filter report
+        awk '{if ($NF >= 0.01){print}}' ~{samplename}.bracken.sorted.txt > ~{samplename}.bracken.sorted.filtered.txt
+        # top taxon
+        sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $1}' > TAXON 
+        # Pecentage
+        sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {printf "%.2f\n", $NF*100}' > RATIO
+        # Taxonomy id
+        sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $2}' > ~{samplename}.taxid.txt
+        sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk -F "\t" 'NR==1 {print $2}' > TAXID 
+        # Genus
+        sort -t$'\t' -k7 -nr ~{samplename}.bracken.txt | awk 'NR==1 {print $1}' > GENUS
+
+    >>>
+
+    output{
+        File kraken2_report = "~{samplename}.kraken.report.txt"
+        File bracken_report = "~{samplename}.bracken.txt"
+        File bracken_report_sorted = "~{samplename}.bracken.sorted.txt"
+        File bracken_report_filtered = "~{samplename}.bracken.sorted.filtered.txt"
         File bracken_taxid_file = "~{samplename}.taxid.txt"
         Int bracken_taxid = read_int("TAXID")
         Float bracken_taxon_ratio = read_float("RATIO")
